@@ -1,0 +1,41 @@
+name: Linko Dual-Engine Sovereign Fleet
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      server_id:
+        description: 'Enter Server Number (1 to 15)'
+        required: true
+        default: '1'
+  schedule:
+    - cron: '0 */6 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install coincurve bit base58 requests
+
+    - name: Run Dual-Engine Sovereign Fleet (Both Scripts Concurrently)
+      run: |
+        echo "[*] Launching Engine 1: Electrum Cluster..."
+        python linko_cluster_1000_electrum.py &
+        
+        echo "[*] Launching Engine 2: Puzzle Kangaroo Hunter..."
+        python linko_cloud_puzzle_cluster_hunter.py ${{ github.event.inputs.server_id || '1' }} &
+        
+        wait
